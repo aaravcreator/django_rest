@@ -12,5 +12,8 @@ urlpatterns = [
    path('recipe_c/<int:id>/',views.RecipeDetailView.as_view()),
    path('recipes/',views.list_recipe),
    path('recipes/<int:id>/',views.recipe_detail),
+   path('recipe_m/',views.list_manual),
    path('api/',include(router.urls)),
+   path('who/',views.who),
+
 ]

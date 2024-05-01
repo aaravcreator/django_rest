@@ -5,7 +5,7 @@ class Recipe(models.Model):
     title=models.CharField(max_length=255)
     description = models.TextField()
     time_required = models.CharField(max_length=20)
-    difficulty = models.CharField(max_length=20,null=True)
+    difficulty = models.CharField(max_length=20,null=True,blank=True)
     rating = models.FloatField(null=True)
     user = models.ForeignKey(User,on_delete=models.CASCADE,null=True)
     def __str__(self):
