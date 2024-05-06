@@ -4,16 +4,51 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 
 from rest_framework.response import Response
-from .models import Recipe
-from .serializers import RecipeSerializer,RecipeCreateSerializer
+from .models import Recipe,Category
+from .serializers import RecipeSerializer,RecipeCreateSerializer,CategorySerializer
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.generics import ListAPIView
+from rest_framework.pagination import PageNumberPagination
+from .pagination import LargeResultsSetPagination
 # Create your views here.
+
+
+# id = 1
+# course = Course.objects.get(id=id)
+# students_in_course = course.students.all()
+
+class RecipeListAPIView(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = Recipe.objects.select_related('category','user').prefetch_related("ingredients")
+    # queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
+    # pagination_class = LargeResultsSetPagination
+
+
+
+class CategoryView(APIView):
+    def get(self,request,*args,**kwargs):
+        categories = Category.objects.all()
+        serializer = CategorySerializer(categories,many=True)
+        return Response(serializer.data)
+    def post(self,request,*args,**kwargs):
+        serializer = CategorySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
 class RecipeViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
+
+
+
+
+
+
+
 
 
 class RecipeListView(APIView):
@@ -30,8 +65,8 @@ class RecipeListView(APIView):
 
 class RecipeDetailView(APIView):
     # permission_classes = [IsAuthenticated]
-    def get(self,request,*args,**kwargs):
-        id = kwargs.get('id')
+    def get(self,request,id,*args,**kwargs):
+        # id = kwargs.get('id')
         print(id)
         try:
             recipe = Recipe.objects.get(id=id)
@@ -82,11 +117,13 @@ def list_recipe(request):
         print(request.data)
         recipe_serializer = RecipeCreateSerializer(data=request.data)
         if recipe_serializer.is_valid(raise_exception=True):
-            # recipe_serializer.save()
-            validated_data = recipe_serializer.validated_data
-            recipe = Recipe(user=request.user,**validated_data)
-            recipe.save()
-            recipe_serializer = RecipeCreateSerializer(recipe)
+            recipe_serializer.save(user=request.user)
+            
+            # recipe_serializer.save(user=request.user,time_required="30 mins",difficulty="EASY",rating=5)
+            # validated_data = recipe_serializer.validated_data
+            # recipe = Recipe(user=request.user,**validated_data)
+            # recipe.save()
+            # recipe_serializer = RecipeCreateSerializer(recipe)
             return Response(recipe_serializer.data,status=201)
         else:
             print(recipe_serializer.errors)
